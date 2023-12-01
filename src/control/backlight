@@ -1,0 +1,20 @@
+#!/bin/sh
+
+backlight_path=/sys/class/backlight/intel_backlight
+export get_brightness="perconf -m 0 -FM $backlight_path/max_brightness -Fc $backlight_path/brightness"
+export update_brightness="perconf -m 0 -FM $backlight_path/max_brightness -Fc $backlight_path/brightness -Fo $backlight_path/brightness"
+
+value(){
+    echo $($get_brightness)
+}
+
+set_value(){
+    $update_brightness -s $1
+}
+
+change_value(){
+    $update_brightness -i $1
+}
+
+
+$1 "${@:2}"

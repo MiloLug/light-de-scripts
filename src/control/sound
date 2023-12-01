@@ -1,0 +1,29 @@
+#!/bin/sh
+
+value(){
+    echo $(pamixer --get-volume)
+}
+
+muted(){
+    return `$(pamixer --get-mute)`
+}
+
+set_value(){
+    pamixer --set-volume $1
+}
+
+change_value(){
+    if [ $1 -ge 0 ]; then
+        pamixer --increase $1
+    else
+        pamixer --decrease ${1:1}
+    fi
+}
+
+toggle_muted(){
+    pamixer -t
+    return $(muted)
+}
+
+
+$1 "${@:2}"
