@@ -10,7 +10,7 @@ light-status \
             echo $('$redshift' value)%;
             sleep 0.2;
         done' \
-    -l 100 -t 100 -w 100 -h 50 \
+    -l 50 -t 100 -w 100 -h 50 \
     &
 
 light-status \
@@ -18,7 +18,7 @@ light-status \
             '$redshift' enabled && echo 🌌 || echo 🌤️;
             sleep 0.2;
         done' \
-    -l 210 -t 100 -w 50 -h 50 \
+    -l 160 -t 100 -w 50 -h 50 \
     -Tf "monospace:size=30" -Tt 1 \
     &
 
