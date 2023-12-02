@@ -1,0 +1,12 @@
+#!/bin/sh
+
+root=$(dirname "$0")
+widget_name="$1"
+
+widget_lock="/tmp/lde-widget-$widget_name.lock"
+
+if kill -15 $(cat "$widget_lock" 2>/dev/null) 2>/dev/null; then
+    exit 0
+else
+    $root/run-widget "$widget_name" ${@:2} &
+fi
