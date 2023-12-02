@@ -1,0 +1,15 @@
+#!/bin/sh
+
+battery_path="/sys/class/power_supply/BAT1"
+charging_state="Charging"
+
+value(){
+    echo $(cat $battery_path/capacity)
+}
+
+charging(){
+    return $(test $(cat $battery_path/status) = $charging_state)
+}
+
+
+$1 "${@:2}"
