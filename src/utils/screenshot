@@ -1,0 +1,44 @@
+#!/bin/bash
+
+path='/home/liava/Pictures/screenshots'
+mkdir -p "$path"
+
+instant=false
+
+filename="$(date +"%Y-%m-%dT%H-%M-%SZ").png"
+file="${path}/${filename}"
+
+[ "$1" = "-i" ] && instant=true && shift
+
+feh_pid=""
+if $instant && [ "$1" = "select" ]; then
+	maim -u | feh -F - &
+	feh_pid=$!
+
+	while [ -z "$(xdotool search --pid "$feh_pid")" ]; do
+    		sleep 0\.05
+	done
+
+	wid="$(xdotool search --pid "$feh_pid")"
+	xdotool windowsize "$wid" 100% 100%
+	xdotool windowmove "$wid" 0 0
+fi
+
+case $1 in
+	"window")
+		maim -i $(xdotool getactivewindow) "$file"
+		;;
+	"select")
+		maim -s -r crosshair "$file"
+		;;
+	*)
+		maim "$file"
+		;;
+esac
+
+kill "$feh_pid" 2>/dev/null
+
+if [ -f "$file" ]; then
+	xclip -selection clipboard -target image/png -i "$file"
+	echo -n "$file" | xclip -selection primary
+fi

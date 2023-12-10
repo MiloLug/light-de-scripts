@@ -1,0 +1,31 @@
+#!/bin/bash
+
+commands=$(
+    # List cmdlines for PIDs that use libX11.so
+    grep -l -m 1 -D skip -w '/usr/lib/libX11.so' /proc/*/maps 2>/dev/null | sed 's/\/maps/\/cmdline/' | uniq | \
+    # Get the paths
+    xargs grep -ah "" | cut -d' ' -f1 | sort -u | \
+    # Leave only the names
+    sed -e 's/.*\///' -e 's/\000/\n/'
+)
+
+# Can be used instead of the above, but slower:
+# lsof -P -T -L -l -X -n -w +c0 /usr/lib/libX11.so | cut -d' ' -f1 | tail -n +2 | sort -u | \
+
+# Search through open programs and switch to their tag
+application=$(
+    printf "$commands" | sort -u | \
+    # Not interested in these
+    grep -v "xinit\|Xorg\|at-spi\|pipewire\|clipnotify\|dwm\|serverauth\|dmenu" | \
+    # Helps to filter some non-window stuff
+    while read -r command; do xdotool search --class '.*'$command'.*' getwindowclassname; done | \
+    # Show the selector
+    dmenu -i -p "Switch to" $@
+)
+
+# Switch to chosen application
+# Sometimes without --onlyvisible xdotool finds some other windows
+#   and didn't switch to anything but returns TRUE
+xdotool search --onlyvisible --classname "$application" windowactivate || \
+    xdotool search --classname "$application" windowactivate
+
