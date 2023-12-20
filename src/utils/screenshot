@@ -4,14 +4,34 @@ path='/home/liava/Pictures/screenshots'
 mkdir -p "$path"
 
 instant=false
+area=""
+highlight=false
 
 filename="$(date +"%Y-%m-%dT%H-%M-%SZ").png"
 file="${path}/${filename}"
 
-[ "$1" = "-i" ] && instant=true && shift
+while [ $# -gt 0 ]; do
+    arg="$1"
+    case $arg in
+        -i|--instant)
+            instant=true
+            ;;
+        -a|--area)
+            shift
+            area="$1"
+            ;;
+        -h|--highlight)
+            highlight=true
+            ;;
+        *)
+            echo "Usage: screenshot [-i|--instant] [-a|--area <window|select>]"
+            exit 1
+    esac
+    shift
+done
 
 feh_pid=""
-if $instant && [ "$1" = "select" ]; then
+if $instant && [ $area = "select" ]; then
 	maim -u | feh -F - &
 	feh_pid=$!
 
@@ -24,15 +44,19 @@ if $instant && [ "$1" = "select" ]; then
 	xdotool windowmove "$wid" 0 0
 fi
 
-case $1 in
+case $area in
 	"window")
-		maim -i $(xdotool getactivewindow) "$file"
+		maim -B -i $(xdotool getactivewindow) "$file"
 		;;
 	"select")
-		maim -s -r crosshair "$file"
+        if $highlight; then
+            maim -B -s -l -c 1,0\.6,0,0\.4 "$file"
+        else
+            maim -B -s "$file"
+        fi
 		;;
 	*)
-		maim "$file"
+		maim -B "$file"
 		;;
 esac
 
