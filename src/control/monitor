@@ -94,14 +94,19 @@ get_best_resolution(){
 }
 
 use_set(){
-    if [ -z "$1" ]; then
-        err_exit "No monitor specified"
+    mons="$*"
+
+    if [ -z "$mons" ]; then
+        mons="$default_set"
+        if [ -z "$mons" ]; then
+            err_exit "No set specified"
+        fi
     fi
 
     command="xrandr"
     existent_monitors=0
 
-    for monitor in "$@"; do
+    for monitor in $mons; do
         if ! is_existent "$monitor"; then
             err_exit "Monitor $monitor not found"
         fi
@@ -130,7 +135,7 @@ use_set(){
     fi
 
     for monitor in $monitors; do
-        if ! echo "$@" | grep -q "$monitor"; then
+        if ! echo "$mons" | grep -q "$monitor"; then
             port="$(get "$monitor" port)"
             command="$command --output $port --off"
         fi
@@ -138,6 +143,22 @@ use_set(){
 
     end_cache
     $command
+}
+
+get_connected_ports(){
+    xrandr -q | sed -n 's/^\([^\s]\+\) connected.*/\1/p' | tr '\n' ' '
+}
+
+wait_for_updates() {
+    info="$(get_connected_ports)"
+    while true; do
+        new_info="$(get_connected_ports)"
+        if [ "$info" != "$new_info" ]; then
+            echo "$new_info"
+            info="$new_info"
+        fi
+        sleep 1
+    done
 }
 
 c="$1"

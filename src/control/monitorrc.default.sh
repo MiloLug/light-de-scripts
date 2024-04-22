@@ -4,6 +4,8 @@
 monitors="prim mon1"
 primary_monitor="prim"
 
+default_set="prim mon1"
+
 # Primary monitor
 prim_port="eDP1"
 prim_resolutions="1920x1080"
