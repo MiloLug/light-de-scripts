@@ -1,7 +1,7 @@
 #!/bin/sh
 
-root=$(dirname $0)
-. $root/common.sh
+root=$(dirname "$0")
+. "$root/common.sh"
 
 min=1000
 max=25000
@@ -12,40 +12,42 @@ if [ ! -f "$confing_root/redshift-value" ]; then
 fi
 
 value(){
-    echo $(perconf -m $min -M $max -Fc "$confing_root/redshift-value" $1)
+    perconf -m $min -M $max -Fc "$confing_root/redshift-value" "$1"
 }
 
 enabled(){
-    return $(cat "$confing_root/redshift-enabled")
+    test "$(cat "$confing_root/redshift-enabled")" -eq 1
 }
 
 apply(){
     if enabled; then
-        redshift -P -O $(cat "$confing_root/redshift-value")
+        redshift -P -O "$(cat "$confing_root/redshift-value")"
     else
         redshift -x
     fi
 }
 
 set_value(){
-    perconf -m $min -M $max -Fc "$confing_root/redshift-value" -Fo "$confing_root/redshift-value" -s $1
+    perconf -m $min -M $max -Fc "$confing_root/redshift-value" -Fo "$confing_root/redshift-value" -s "$1"
     apply
 }
 
 change_value(){
-    perconf -m $min -M $max -Fc "$confing_root/redshift-value" -Fo "$confing_root/redshift-value" -i $1
+    perconf -m $min -M $max -Fc "$confing_root/redshift-value" -Fo "$confing_root/redshift-value" -i "$1"
     apply
 }
 
 toggle_enabled(){
-    if [ $(cat "$confing_root/redshift-enabled") -eq 1 ]; then
+    if enabled; then
         echo 0 > "$confing_root/redshift-enabled"
     else
         echo 1 > "$confing_root/redshift-enabled"
     fi
 
     apply
-    return $(enabled)
+    enabled
 }
 
-$1 "${@:2}"
+c="$1"
+shift
+$c "$@"
