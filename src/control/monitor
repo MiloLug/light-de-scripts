@@ -1,0 +1,145 @@
+#!/bin/sh
+
+root=$(dirname "$0")
+. "$root/common.sh"
+
+rcfile="$confing_root/monitorrc.sh"
+if [ ! -f "$rcfile" ]; then
+    cat "$root/monitorrc.default.sh" > "$rcfile"
+fi
+
+# shellcheck source=src/control/monitorrc.default.sh
+. "$rcfile"
+
+cache_prefix="$confing_root/monitor-cache-"
+skip_inactive=true
+if [ "$1" = "--strict-active" ]; then
+    skip_inactive=false
+    shift
+fi
+
+get(){
+    eval "echo \$${1}_${2}"
+}
+
+start_cache(){
+    cache_file="${cache_prefix}$1"
+    if [ ! -f "$cache_file" ]; then
+        touch "$cache_file"
+    else
+        echo "" > "$cache_file"
+    fi
+}
+
+end_cache(){
+    rm "${cache_prefix}"* 2>/dev/null
+}
+
+check_cache(){
+    if [ -f "${cache_prefix}$1" ]; then
+        echo "1"
+    fi
+
+    echo "0"
+}
+
+err_exit(){
+    echo "$1" >&2
+    end_cache
+    exit 1
+}
+
+get_monitor_info(){
+    use_cache=$(check_cache "$1")
+    if [ "$use_cache" = "1" ]; then
+        info="$(cat "${cache_prefix}$1")"
+        if [ -n "$info" ]; then
+            echo "$info"
+        fi
+    fi
+
+    info="$(
+        xrandr |
+        awk -v monitor="^$(get "$1" port) connected" '/connected/ {p = 0}
+            $0 ~ monitor {p = 1}
+            p'
+    )"
+
+    if [ -z "$info" ] && ! $skip_inactive; then
+        err_exit "Monitor $1 not found"
+    fi
+
+    [ "$use_cache" = "1" ] && echo "$info" > "${cache_prefix}$1"
+    echo "$info"
+}
+
+is_connected(){
+    info="$(get_monitor_info "$1")"
+    [ -n "$info" ]
+}
+
+is_existent(){
+    echo "$monitors" | grep -q "$1"
+}
+
+get_best_resolution(){
+    ress=$(get "$1" resolutions)
+    info="$(get_monitor_info "$1")"
+    for res in $ress; do
+        if echo "$info" | grep -q "$res"; then
+            printf "%s" "$res"
+            return
+        fi
+    done
+}
+
+use_set(){
+    if [ -z "$1" ]; then
+        err_exit "No monitor specified"
+    fi
+
+    command="xrandr"
+    existent_monitors=0
+
+    for monitor in "$@"; do
+        if ! is_existent "$monitor"; then
+            err_exit "Monitor $monitor not found"
+        fi
+        start_cache "$monitor"
+        
+        port="$(get "$monitor" port)"
+        if ! is_connected "$monitor"; then
+            command="$command --output $port --off"
+            continue
+        fi
+
+        res="$(get_best_resolution "$monitor")"
+        args="$(get "$monitor" "${res}_args")"
+
+        add_args=""
+        if [ "$monitor" = "$primary_monitor" ]; then
+            add_args="--primary"
+        fi
+
+        command="$command --output $port --mode $res $args $add_args"
+        existent_monitors=$((existent_monitors + 1))
+    done
+
+    if [ "$existent_monitors" -eq 0 ]; then
+        err_exit "No monitors connected. Or all monitors names are invalid: $*"
+    fi
+
+    for monitor in $monitors; do
+        if ! echo "$@" | grep -q "$monitor"; then
+            port="$(get "$monitor" port)"
+            command="$command --output $port --off"
+        fi
+    done
+
+    end_cache
+    $command
+}
+
+c="$1"
+shift
+$c "$@"
