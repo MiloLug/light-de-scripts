@@ -18,6 +18,7 @@ application=$(
     # Not interested in these
     grep -v "xinit\|Xorg\|at-spi\|pipewire\|clipnotify\|dwm\|serverauth\|dmenu" | \
     # Helps to filter some non-window stuff
+    sed -e 's/[][\${}]/\\&/g' | \
     while read -r command; do xdotool search --class '.*'$command'.*' getwindowclassname; done | \
     # Show the selector
     dmenu -i -p "Switch to" $@
