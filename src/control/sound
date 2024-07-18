@@ -1,30 +1,72 @@
 #!/bin/sh
 
+root=$(dirname "$0")
+. "$root/common.sh"
+
+rcfile="$confing_root/soundrc.sh"
+if [ ! -f "$rcfile" ]; then
+    cat "$root/soundrc.default.sh" > "$rcfile"
+fi
+
+# shellcheck source=src/control/soundrc.default.sh
+. "$rcfile"
+
+get_sink_id(){
+    for sink in $sinks; do
+        if pactl list short sinks | cut -f2 | grep -qwxF "$sink"; then
+            printf "%s" "$sink"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Get the sink id to be used by default.
+# For the commands not supposed to be used in a long running process
+default_sink="$(get_sink_id)"
+if [ -n "$default_sink" ]; then
+    command="pamixer --sink $default_sink"
+else
+    command="pamixer"
+fi
+
 value(){
-    pamixer --get-volume
+    $command --get-volume
 }
 
 muted(){
-    test "$(pamixer --get-mute)" = "true"
+    test "$($command --get-mute)" = "true"
 }
 
 set_value(){
-    pamixer --set-volume "$1"
+    $command --set-volume "$1"
 }
 
 change_value(){
     if [ "$1" -ge 0 ]; then
-        pamixer --increase "$1"
+        $command --increase "$1"
     else
-        pamixer --decrease "$(echo "$1" | cut -c2-)"
+        $command --decrease "$(echo "$1" | cut -c2-)"
     fi
 }
 
 toggle_muted(){
-    pamixer -t
+    $command -t
     muted
 }
 
+wait_for_sink_change() {
+    sink="$(get_sink_id)"
+    pactl subscribe | grep --line-buffered " sink " | while read -r _; do
+        # It's not important to know whether there is a sink at all,
+        # so don't check for errors
+        new_sink="$(get_sink_id)"
+        if [ "$sink" != "$new_sink" ]; then
+            sink="$new_sink"
+            echo "$sink"
+        fi
+    done
+}
 
 c="$1"
 shift

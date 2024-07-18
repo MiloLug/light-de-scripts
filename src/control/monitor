@@ -24,11 +24,7 @@ get(){
 
 start_cache(){
     cache_file="${cache_prefix}$1"
-    if [ ! -f "$cache_file" ]; then
-        touch "$cache_file"
-    else
-        echo "" > "$cache_file"
-    fi
+    echo "" > "$cache_file"
 }
 
 end_cache(){
@@ -78,14 +74,14 @@ is_connected(){
     [ -n "$info" ]
 }
 
-is_existent(){
+is_defined(){
     echo "$monitors" | grep -q "$1"
 }
 
 get_best_resolution(){
-    ress=$(get "$1" resolutions)
+    res_available=$(get "$1" resolutions)
     info="$(get_monitor_info "$1")"
-    for res in $ress; do
+    for res in $res_available; do
         if echo "$info" | grep -q "$res"; then
             printf "%s" "$res"
             return
@@ -107,7 +103,7 @@ use_set(){
     existent_monitors=0
 
     for monitor in $mons; do
-        if ! is_existent "$monitor"; then
+        if ! is_defined "$monitor"; then
             err_exit "Monitor $monitor not found"
         fi
         start_cache "$monitor"
