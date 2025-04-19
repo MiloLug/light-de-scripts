@@ -3,7 +3,7 @@ root=$(dirname "$0")/..
 . "$root/common.sh"
 
 backlight="$scripts_root/control/backlight"
-
+cursor_pos=$(hyprctl cursorpos | sed 's/, /:/'):10
 
 light-status \
     -i 'while true; do
@@ -11,6 +11,7 @@ light-status \
             sleep 0.1;
         done' \
     -l 50 -t 100 -w 100 -h 50 \
+    -Xp $cursor_pos\
     &
 
 light-status \
@@ -20,6 +21,7 @@ light-status \
         done' \
     -l 160 -t 100 -w 50 -h 50 \
     -Tf "monospace:size=30" -Tt 1 \
+    -Xp $cursor_pos \
     &
 
 wait

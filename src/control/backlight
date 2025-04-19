@@ -1,9 +1,20 @@
 #!/bin/sh
+root=$(dirname "$0")
+. "$root/common.sh"
 
-backlight_path=/sys/class/backlight/intel_backlight
+rcfile="$confing_root/backlightrc.sh"
+if [ ! -f "$rcfile" ]; then
+    cat "$root/backlightrc.default.sh" > "$rcfile"
+fi
+
+# shellcheck source=src/control/backlightrc.default.sh
+. "$rcfile"
+
+tmp_value_file="$confing_root/.backlight-value-tmp"
 
 get_brightness="perconf -m 0 -FM $backlight_path/max_brightness -Fc $backlight_path/brightness"
 update_brightness="perconf -m 0 -FM $backlight_path/max_brightness -Fc $backlight_path/brightness -Fo $backlight_path/brightness"
+
 
 value(){
     $get_brightness

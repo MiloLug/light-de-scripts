@@ -25,7 +25,7 @@ if [ ! -z "$displace_group" ]; then
     run-safe \
         -l "$displace_prefix.lock" \
         -c 'prev_lock="$(cat '$displace_prefix.prev')"
-            test "$prev_lock" = "'$widget_lock'" || kill -15 $(cat "$prev_lock" 2>/dev/null) 2>/dev/null
+            test "$prev_lock" = "'$widget_lock'" || kill -2 $(cat "$prev_lock" 2>/dev/null) 2>/dev/null
             echo "'$widget_lock'" > "'$displace_prefix.prev'"'
 
     wait
