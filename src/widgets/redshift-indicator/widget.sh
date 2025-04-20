@@ -3,8 +3,7 @@ root=$(dirname "$0")/..
 . "$root/common.sh"
 
 redshift="$scripts_root/control/redshift"
-cursor_pos=$(hyprctl cursorpos | sed 's/, /:/'):10
-
+monitor=$(get_focused_monitor)
 
 light-status \
     -i 'while true; do
@@ -12,7 +11,7 @@ light-status \
             sleep 0.2;
         done' \
     -l 50 -t 100 -w 100 -h 50 \
-    -Xp $cursor_pos \
+    -Xd $monitor \
     &
 
 light-status \
@@ -22,7 +21,7 @@ light-status \
         done' \
     -l 160 -t 100 -w 50 -h 50 \
     -Tf "monospace:size=30" -Tt 1 \
-    -Xp $cursor_pos \
+    -Xd $monitor \
     &
 
 wait

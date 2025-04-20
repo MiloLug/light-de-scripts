@@ -8,19 +8,21 @@ CACHE_DIR ?= .build-cache
 
 ABS_CACHE_DIR = $(shell readlink -f ${CACHE_DIR})
 SUB_MAKEFILES = src/control/backlight.mk
-CACHE_MAKEFILES = $(addprefix ${ABS_CACHE_DIR}/, ${SUB_MAKEFILES})
 
 ${ABS_CACHE_DIR}:
 	mkdir -p $@
 
-${CACHE_MAKEFILES}: ${SUB_MAKEFILES} | ${ABS_CACHE_DIR}
-	mkdir -p $(dir $@)
-	cp $< $@
-	make -C $(dir $@) -f $@ MODE=${MODE} CACHE_DIR=$(dir $@)/cache
+build: ${SUB_MAKEFILES} | ${ABS_CACHE_DIR}
+	@echo "--- BUILD SUB: ${notdir $<}"
+	cd $(dir $<) && \
+		make -f $(notdir $<) MODE=${MODE} CACHE_DIR=${ABS_CACHE_DIR}/$(dir $<)cache build
 
-build: ${CACHE_MAKEFILES}
+install_makefiles: ${SUB_MAKEFILES} | build
+	@echo "--- INSTALL SUB: ${notdir $<}"
+	cd $(dir $<) && \
+		make -f $(notdir $<) MODE=${MODE} CACHE_DIR=${ABS_CACHE_DIR}/$(dir $<)cache install
 
-install: build
+install: install_makefiles
 	mkdir -p ${DESTDIR}${PREFIX}/de-scripts
 	rm -rf ${DESTDIR}${PREFIX}/de-scripts/*
 	cp -r src/* ${DESTDIR}${PREFIX}/de-scripts

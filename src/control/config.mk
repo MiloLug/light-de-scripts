@@ -2,8 +2,7 @@
 VERSION = 0.0.1
 
 # paths
-PREFIX = /usr/local
-MANPREFIX = ${PREFIX}/share/man
+PREFIX = helpers-bin
 
 # flags
 DEFFLAGS = -D_DEFAULT_SOURCE -DVERSION=\"${VERSION}\"
