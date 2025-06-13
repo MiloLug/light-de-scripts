@@ -2,7 +2,7 @@
 VERSION = 0.0.1
 
 # paths
-PREFIX = helpers-bin
+HELPERS_DIR = helpers-bin
 
 # flags
 DEFFLAGS = -D_DEFAULT_SOURCE -DVERSION=\"${VERSION}\"

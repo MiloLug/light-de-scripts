@@ -12,12 +12,22 @@ fi
 . "$rcfile"
 
 get_sink_id(){
+    mixer_default=$(pamixer --get-default-sink | tail -n 1 | cut -f2 -d ' ')
+    mixer_default="${mixer_default:1:-1}" # remove quotes
+
+    if [ -n "$mixer_default" ] && grep -qwF "$mixer_default" <<< "$sinks"; then
+        printf "%s" "$mixer_default"
+        return 0
+    fi
+
+    pactl_sinks=$(pactl list short sinks | cut -f2)
     for sink in $sinks; do
-        if pactl list short sinks | cut -f2 | grep -qwxF "$sink"; then
+        if grep -qwxF "$sink" <<< "$pactl_sinks"; then
             printf "%s" "$sink"
             return 0
         fi
     done
+
     return 1
 }
 
@@ -66,6 +76,14 @@ wait_for_sink_change() {
             echo "$sink"
         fi
     done
+}
+
+auto_show_widget() {
+    pactl subscribe \
+        | grep --line-buffered " sink " \
+        | while read -r _; do
+            $widgets/run-widget volume-indicator 3 &
+        done
 }
 
 c="$1"

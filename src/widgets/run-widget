@@ -9,24 +9,24 @@ widget_path="$root/$widget_name"
 
 widget_lock="/tmp/lde-widget-$widget_name.lock"
 
-
 if [ -z "$show_timeout" ]; then
     run_command="run-safe"
 else
-    run_command="timeout $show_timeout run-safe"
+    run_command="timeout -f $show_timeout run-safe"
 fi
 
 if [ ! -z "$displace_group" ]; then
     displace_prefix="/tmp/lde-displace-$displace_group"
 
+    echo "$run_command"
     $run_command -l "$widget_lock" -c "$widget_path/widget.sh" &
-    sleep 0\.1
+    sleep 0.1
 
     run-safe \
         -l "$displace_prefix.lock" \
         -c 'prev_lock="$(cat '$displace_prefix.prev')"
             test "$prev_lock" = "'$widget_lock'" || kill -2 $(cat "$prev_lock" 2>/dev/null) 2>/dev/null
-            echo "'$widget_lock'" > "'$displace_prefix.prev'"'
+            echo '$widget_lock' > '$displace_prefix.prev
 
     wait
 else

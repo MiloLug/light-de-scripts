@@ -7,6 +7,9 @@ BIN_NAME = backlight-setter
 
 MODE ?= release
 CACHE_DIR ?= .build-cache
+PREFIX ?= .
+
+OUT_DIR = ${PREFIX}/${HELPERS_DIR}/${BIN_NAME}
 
 SRC = backlight-setter.c
 HEADERS = 
@@ -34,8 +37,11 @@ ${CACHE_DIR}/${BIN_NAME}: ${OBJ}
 build: | ${CACHE_DIR}/${BIN_NAME} options
 
 install: build
-	mkdir -p ${DESTDIR}${PREFIX}/${BIN_NAME}
-	cp ${CACHE_DIR}/${BIN_NAME} ${DESTDIR}${PREFIX}/${BIN_NAME}
+	mkdir -p ${OUT_DIR}
+	cp ${CACHE_DIR}/${BIN_NAME} ${OUT_DIR}/${BIN_NAME}
+	chown root:root ${OUT_DIR}/${BIN_NAME}
+	chmod 755 ${OUT_DIR}/${BIN_NAME}
+	chmod +s ${OUT_DIR}/${BIN_NAME}
 
 clean:
 	rm -rf ${CACHE_DIR}

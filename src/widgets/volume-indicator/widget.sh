@@ -1,4 +1,5 @@
 #!/bin/sh
+
 root=$(dirname "$0")/..
 . "$root/common.sh"
 
